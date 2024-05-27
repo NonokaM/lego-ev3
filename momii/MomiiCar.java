@@ -51,13 +51,30 @@ public class MomiiCar extends AbstCar {
     /**
      * 走行メソッドをオーバーライドして、ナビゲーションの切り替え機能を追加
      */
+//    @Override
+//    public void run() {
+//        while (!Button.ESCAPE.isDown() && colorChecker.getColorId() != Color.RED) {
+//            if (Button.ENTER.isDown()) {
+//                switchNavigator();  // ナビゲーター切り替え
+//                while(Button.ENTER.isDown()) { // ENTERボタンがリリースされるまで待つ
+//                    // 何もしない、ただ待つ
+//                }
+//            }
+//            currentNavigator.decision(colorChecker, driver);
+//        }
+//    }
     @Override
     public void run() {
         while (!Button.ESCAPE.isDown() && colorChecker.getColorId() != Color.RED) {
-            if (Button.ENTER.isDown()) {
+            if (colorChecker.getColorId() == Color.CYAN) { // シアン色を検知した場合
                 switchNavigator();  // ナビゲーター切り替え
-                while(Button.ENTER.isDown()) { // ENTERボタンがリリースされるまで待つ
-                    // 何もしない、ただ待つ
+                while (colorChecker.getColorId() == Color.CYAN) {
+                    // シアン色が続いている間は何もしない（チャタリング防止）
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
             currentNavigator.decision(colorChecker, driver);
