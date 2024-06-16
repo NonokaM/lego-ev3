@@ -9,8 +9,9 @@ import jp.ac.kanazawait.ep.majorlabB.driver.AbstDriver;
  */
 public class MomiiNaiveDriver extends AbstDriver {
 
-	final int speedNormal = 200;
-	final int speedLow = 100;
+	final int speedNormal = 300;
+	final int speedSyan = 140;
+	final int speedLow = 80;
 
 	/**
 	 * 左モーターを "B" に，右モーターを "C" に接続した状態のコンストラクタ
@@ -51,6 +52,16 @@ public class MomiiNaiveDriver extends AbstDriver {
 	public void turnRight() {
 		setSpeed(speedNormal, speedLow);
 	}
+	
+    // シアン色検出時の速度設定
+    public void adjustSpeedForCyanDetection() {
+        setSpeed(speedSyan); // シアン色を検出した際の速度を低速に設定
+    }
+
+    // 通常速度へのリセット
+    public void resetSpeedToNormal() {
+        setSpeed(speedNormal); // シアン色以外が検出された際に通常速度に戻す
+    }
 
 	/**
 	 * {@inheritDoc}

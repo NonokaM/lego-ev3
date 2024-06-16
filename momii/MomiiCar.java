@@ -3,39 +3,15 @@ package jp.ac.kanazawait.ep.momii;
 import jp.ac.kanazawait.ep.majorlabB.car.AbstCar;
 import jp.ac.kanazawait.ep.majorlabB.car.TimeKeeper;
 import jp.ac.kanazawait.ep.majorlabB.checker.ColorCheckerThread;
-import jp.ac.kanazawait.ep.majorlabB.navigator.Navigator;  // Navigatorインターフェースのインポート
+import jp.ac.kanazawait.ep.majorlabB.navigator.Navigator;
 import lejos.hardware.Button;
 import lejos.robotics.Color;
-
-//public class MomiiCar extends AbstCar {
-//
-//	public static void main(String[] args) {
-//		TimeKeeper car = new MomiiCar();
-//		car.start();
-//	}
-//
-//	public MomiiCar() {
-//		colorChecker = ColorCheckerThread.getInstance();
-//		driver = new MomiiNaiveDriver("B", "C");
-//		navigator = new MomiiNaiveRightEdgeTracer();
-//	}
-//
-//	/**
-//	 * {@inheritDoc}
-//	 */
-//	@Override
-//	public void run() {
-//		while (!Button.ESCAPE.isDown() && colorChecker.getColorId() != Color.RED) {
-//			navigator.decision(colorChecker, driver);
-//		}
-//	}
-//
-//}
 
 public class MomiiCar extends AbstCar {
 
     private Navigator currentNavigator;
-    private boolean isUsingRightEdgeTracer = true;  // 初期状態は右エッジ追従
+    private boolean isUsingRightEdgeTracer = false;
+    private int lastColor = Color.NONE; // 前回の色を保存する変数
 
     public static void main(String[] args) {
         TimeKeeper car = new MomiiCar();
@@ -45,53 +21,55 @@ public class MomiiCar extends AbstCar {
     public MomiiCar() {
         colorChecker = ColorCheckerThread.getInstance();
         driver = new MomiiNaiveDriver("B", "C");
-        currentNavigator = new MomiiNaiveRightEdgeTracer();  // 初期ナビゲーターは右エッジ追従
+        currentNavigator = new MomiiNaiveLeftEdgeTracer(); // 初期は左エッジ走行
     }
 
-    /**
-     * 走行メソッドをオーバーライドして、ナビゲーションの切り替え機能を追加
-     */
-//    @Override
-//    public void run() {
-//        while (!Button.ESCAPE.isDown() && colorChecker.getColorId() != Color.RED) {
-//            if (Button.ENTER.isDown()) {
-//                switchNavigator();  // ナビゲーター切り替え
-//                while(Button.ENTER.isDown()) { // ENTERボタンがリリースされるまで待つ
-//                    // 何もしない、ただ待つ
-//                }
-//            }
-//            currentNavigator.decision(colorChecker, driver);
-//        }
-//    }
     @Override
     public void run() {
+    	
+    	 MomiiNaiveRightEdgeTracer  navi_R = new MomiiNaiveRightEdgeTracer();
+    	 MomiiNaiveLeftEdgeTracer   navi_L = new MomiiNaiveLeftEdgeTracer();
+    	 
+    	 
+    	 lastColor = colorChecker.getColorId();
         while (!Button.ESCAPE.isDown() && colorChecker.getColorId() != Color.RED) {
-            if (colorChecker.getColorId() == Color.CYAN) { // シアン色を検知した場合
-                switchNavigator();  // ナビゲーター切り替え
-                while (colorChecker.getColorId() == Color.CYAN) {
-                    // シアン色が続いている間は何もしない（チャタリング防止）
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+        	
+            int currentColor = colorChecker.getColorId(); // 現在の色を取得
+            if ((lastColor == Color.BLACK || lastColor == Color.WHITE || lastColor == Color.DARK_GRAY) && currentColor == Color.CYAN) {
+//            if (lastColor == Color.BLACK && currentColor == Color.CYAN) {
+
+            	
+                if (isUsingRightEdgeTracer) {
+                    currentNavigator = navi_L;
+                } else {
+                    currentNavigator = navi_R;
                 }
+                
+                isUsingRightEdgeTracer = !isUsingRightEdgeTracer; // フラグを反転
+            	
+//            	switchNavigator(); // 黒または白からシアンに変わった時のみナビゲーターを切り替え            
             }
-            currentNavigator.decision(colorChecker, driver);
+            currentNavigator.decision(colorChecker, driver); // ナビゲーションの判断を実行
+
+            lastColor = currentColor; // 現在の色を前回の色として保存
+//
+//            try {
+//                Thread.sleep(10); // チャタリング防止
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
         }
     }
+ 
 
-    /**
-     * 現在のナビゲーターを切り替える
-     */
     private void switchNavigator() {
-        isUsingRightEdgeTracer = !isUsingRightEdgeTracer;  // フラグを反転
+        isUsingRightEdgeTracer = !isUsingRightEdgeTracer; // フラグを反転
         if (isUsingRightEdgeTracer) {
             currentNavigator = new MomiiNaiveRightEdgeTracer();
-            System.out.println("Switched to Right Edge Tracing");
+ //           System.out.println("Switched to Right Edge Tracing");
         } else {
             currentNavigator = new MomiiNaiveLeftEdgeTracer();
-            System.out.println("Switched to Left Edge Tracing");
+ //           System.out.println("Switched to Left Edge Tracing");
         }
     }
 }
